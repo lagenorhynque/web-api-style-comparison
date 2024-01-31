@@ -1,0 +1,19 @@
+@startuml
+entity user {
+  * user_id
+}
+
+entity book {
+  * book_id
+}
+
+entity bookshelf_item {
+  * bookshelf_item_id
+  --
+  * user_id <<FK>>
+  * book_id <<FK>>
+}
+
+user --o{ bookshelf_item
+bookshelf_item }o-- book
+@enduml
