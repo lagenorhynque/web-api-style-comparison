@@ -1,0 +1,519 @@
+### schema
+
+schema {
+  mutation: Mutation
+  query: Query
+}
+
+### types
+
+"""
+カタログへの書籍の追加のペイロード
+"""
+type AddBookToCatalogPayload {
+  """
+  追加された書籍
+  """
+  book: Book!
+}
+
+"""
+書籍
+"""
+type Book {
+  """
+  書籍ID
+  """
+  id: ID!
+
+  """
+  書名
+  """
+  title: String!
+
+  """
+  著者
+  """
+  author: String!
+
+  """
+  出版社
+  """
+  publisher: String!
+
+  """
+  出版年月日
+  """
+  publishedOn: Date!
+
+  """
+  公式サイトURL
+  """
+  officialSiteUrl: String
+
+  """
+  追加日時
+  """
+  addedAt: DateTime!
+
+  """
+  更新日時
+  """
+  updatedAt: DateTime
+
+  """
+  レビューの集計結果
+  """
+  reviewSummary: ReviewSummary!
+}
+
+"""
+本棚の書籍
+"""
+type BookshelfItem {
+  """
+  本棚の書籍ID
+  """
+  id: ID!
+
+  """
+  書籍
+  """
+  book: Book!
+
+  """
+  読書状況
+  """
+  readingStatus: ReadingStatus!
+
+  """
+  レビュー
+  """
+  review: Review!
+
+  """
+  登録日時
+  """
+  putOnAt: DateTime!
+
+  """
+  更新日時
+  """
+  updatedAt: DateTime
+}
+
+"""
+ミューテーション(更新系アクセス)
+"""
+type Mutation {
+  """
+  カタログへの書籍の追加
+
+  書籍をカタログに追加する。
+  """
+  addBookToCatalog(
+    """
+    追加内容
+    """
+    input: AddBookToCatalogInput!
+  ): AddBookToCatalogPayload
+
+  """
+  本棚への書籍の登録
+
+  特定の書籍をステータスとともに本棚に登録する。
+  """
+  putBookOnBookshelf(
+    """
+    登録内容
+    """
+    input: PutBookOnBookshelfInput!
+  ): PutBookOnBookshelfPayload
+
+  """
+  カタログからの書籍の削除
+
+  特定の書籍をカタログから削除する。
+  """
+  removeBookFromCatalog(
+    """
+    削除対象
+    """
+    input: RemoveBookFromCatalogInput!
+  ): RemoveBookFromCatalogPayload
+
+  """
+  本棚からの書籍の削除
+
+  本棚の特定の書籍を本棚から削除する。
+  """
+  removeBookFromBookshelf(
+    """
+    削除対象
+    """
+    input: RemoveBookFromBookshelfInput!
+  ): RemoveBookFromBookshelfPayload
+
+  """
+  カタログの書籍の更新
+
+  特定の書籍を更新する。
+  """
+  updateBookInCatalog(
+    """
+    更新内容
+    """
+    input: UpdateBookInCatalogInput!
+  ): UpdateBookInCatalogPayload
+
+  """
+  本棚の書籍のステータス更新
+
+  本棚の特定の書籍のステータスを更新する。
+  """
+  updateBookStatusInBookshelf(
+    """
+    更新内容
+    """
+    input: UpdateBookStatusInBookshelfInput!
+  ): UpdateBookStatusInBookshelfPayload
+}
+
+"""
+本棚への書籍の登録のペイロード
+"""
+type PutBookOnBookshelfPayload {
+  """
+  登録された本棚の書籍
+  """
+  bookshelfItem: BookshelfItem!
+}
+
+"""
+クエリ(参照系アクセス)
+"""
+type Query {
+  """
+  本棚の書籍の取得
+
+  本棚の特定の書籍をステータスとともに取得する。
+  """
+  bookInBookshelfById(
+    """
+    本棚の書籍ID
+    """
+    id: ID!
+  ): BookshelfItem
+
+  """
+  本棚の書籍の一覧取得
+
+  本棚の書籍をステータスとともにすべて取得する。
+  """
+  booksInBookshelf: [BookshelfItem!]!
+
+  """
+  カタログの書籍の取得
+
+  特定の書籍を取得する。
+  """
+  bookInCatalogById(
+    """
+    書籍ID
+    """
+    id: ID!
+  ): Book
+
+  """
+  カタログの書籍の一覧取得
+
+  検索条件を満たす書籍をカタログから取得する。
+  """
+  booksInCatalog(
+    """
+    書名 (部分一致)
+    """
+    title: String
+
+    """
+    著者 (部分一致)
+    """
+    author: String
+
+    """
+    出版社 (部分一致)
+    """
+    publisher: String
+
+    """
+    出版年月日 (始点)
+    """
+    publishedOnFrom: Date
+
+    """
+    出版年月日 (終点)
+    """
+    publishedOnTo: Date
+  ): [Book!]!
+}
+
+"""
+カタログからの書籍の削除のペイロード
+"""
+type RemoveBookFromCatalogPayload {
+  """
+  削除された書籍
+  """
+  book: Book!
+}
+
+"""
+本棚からの書籍の削除のペイロード
+"""
+type RemoveBookFromBookshelfPayload {
+  """
+  削除された本棚の書籍
+  """
+  bookshelfItem: BookshelfItem!
+}
+
+"""
+レビュー
+"""
+type Review {
+  """
+  ランク (星の数1〜5)
+  """
+  rank: Int
+
+  """
+  コメント
+  """
+  comment: String
+}
+
+"""
+レビューの集計結果
+"""
+type ReviewSummary {
+  """
+  平均ランク
+
+  ランク付きのレビューが0件の場合は `null` 。
+  """
+  averageRank: Float
+
+  """
+  リスト
+  """
+  reviews: [Review!]!
+}
+
+"""
+カタログの書籍の更新のペイロード
+"""
+type UpdateBookInCatalogPayload {
+  """
+  更新された書籍
+  """
+  book: Book!
+}
+
+"""
+本棚の書籍のステータス更新のペイロード
+"""
+type UpdateBookStatusInBookshelfPayload {
+  """
+  更新された本棚の書籍
+  """
+  bookshelfItem: BookshelfItem!
+}
+
+### inputs
+
+"""
+カタログへの書籍の追加の入力
+"""
+input AddBookToCatalogInput {
+  """
+  書名
+  """
+  title: String!
+
+  """
+  著者
+  """
+  author: String!
+
+  """
+  出版社
+  """
+  publisher: String!
+
+  """
+  出版年月日
+  """
+  publishedOn: Date!
+
+  """
+  公式サイトURL
+  """
+  officialSiteUrl: String
+}
+
+"""
+本棚への書籍の登録の入力
+"""
+input PutBookOnBookshelfInput {
+  """
+  書籍ID
+  """
+  bookId: ID!
+
+  """
+  読書状況
+  """
+  status: ReadingStatus!
+
+  """
+  レビュー
+  """
+  review: ReviewInput
+}
+
+"""
+カタログからの書籍の削除の入力
+"""
+input RemoveBookFromCatalogInput {
+  """
+  書籍ID
+  """
+  id: ID!
+}
+
+"""
+本棚からの書籍の削除の入力
+"""
+input RemoveBookFromBookshelfInput {
+  """
+  本棚の書籍ID
+  """
+  id: ID!
+}
+
+"""
+レビューの入力
+"""
+input ReviewInput {
+  """
+  ランク (星の数1〜5)
+  """
+  rank: Int
+
+  """
+  コメント
+  """
+  comment: String
+}
+
+"""
+カタログの書籍の更新の入力
+"""
+input UpdateBookInCatalogInput {
+  """
+  書籍ID
+  """
+  id: ID!
+
+  """
+  書名
+  """
+  title: String
+
+  """
+  著者
+  """
+  author: String
+
+  """
+  出版社
+  """
+  publisher: String
+
+  """
+  出版年月日
+  """
+  publishedOn: Date
+
+  """
+  公式サイトURL
+  """
+  officialSiteUrl: String
+}
+
+"""
+本棚の書籍のステータス更新の入力
+"""
+input UpdateBookStatusInBookshelfInput {
+  """
+  本棚の書籍ID
+  """
+  id: ID!
+
+  """
+  読書状況
+  """
+  status: ReadingStatus
+
+  """
+  レビュー
+  """
+  review: ReviewInput
+}
+
+### interfaces
+
+### unions
+
+### enums
+
+"""
+読書状況
+"""
+enum ReadingStatus {
+  """
+  積ん読
+  """
+  UNREAD
+
+  """
+  読みたい
+  """
+  TO_READ
+
+  """
+  読んでいる
+  """
+  READING
+
+  """
+  読み終えた
+  """
+  READ
+}
+
+### scalars
+
+"""
+日付
+
+[ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)に準拠した日付文字列(cf. Java言語の[ISO_LOCAL_DATE](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html#ISO_LOCAL_DATE))。
+"""
+scalar Date
+
+"""
+日付時刻
+
+[ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)に準拠した日付時刻文字列(cf. Java言語の[ISO_OFFSET_DATE_TIME](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html#ISO_OFFSET_DATE_TIME))。
+"""
+scalar DateTime

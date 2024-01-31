@@ -1,0 +1,236 @@
+syntax = "proto3";
+
+package com.github.lagenorhynque.biblog;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+
+// 書籍管理サービス"Biblog"のgRPC API
+service BiblogApi {
+  // 書籍を一覧取得する
+  rpc ListBooksInCatalog(ListBooksInCatalogRequest) returns (ListBooksInCatalogResponse);
+
+  // 書籍を追加する
+  rpc AddBookToCatalog(AddBookToCatalogRequest) returns (AddBookToCatalogResponse);
+
+  // 書籍の詳細を取得する
+  rpc GetBookInCatalogById(GetBookInCatalogByIdRequest) returns (GetBookInCatalogByIdResponse);
+
+  // 書籍を更新する
+  rpc UpdateBookInCatalog(UpdateBookInCatalogRequest) returns (UpdateBookInCatalogResponse);
+
+  // 書籍を削除する
+  rpc RemoveBookFromCatalog(RemoveBookFromCatalogRequest) returns (google.protobuf.Empty);
+
+  // 本棚の書籍を一覧取得する
+  rpc ListBooksInBookshelf(google.protobuf.Empty) returns (ListBooksInBookshelfResponse);
+
+  // 本棚に書籍を登録する
+  rpc PutBookOnBookshelf(PutBookOnBookshelfRequest) returns (PutBookOnBookshelfResponse);
+
+  // 本棚の書籍の詳細を取得する
+  rpc GetBookInBookshelfById(GetBookInBookshelfByIdRequest) returns (GetBookInBookshelfByIdResponse);
+
+  // 本棚の書籍のステータスを更新する
+  rpc UpdateBookStatusInBookshelf(UpdateBookStatusInBookshelfRequest) returns (UpdateBookStatusInBookshelfResponse);
+
+  // 本棚から書籍を削除する
+  rpc RemoveBookFromBookshelf(RemoveBookFromBookshelfRequest) returns (google.protobuf.Empty);
+}
+
+// 日付
+message Date {
+  // 年
+  int32 year = 1;
+  // 月
+  int32 month = 2;
+  // 日
+  int32 day = 3;
+}
+
+// 書籍
+message Book {
+  // 書籍ID
+  int32 id = 1;
+  // 書名
+  string title = 2;
+  // 著者
+  string author = 3;
+  // 出版社
+  string publisher = 4;
+  // 出版年月日
+  Date published_on = 5;
+  // 公式サイトURL
+  optional string official_site_url = 6;
+  // 追加日時
+  google.protobuf.Timestamp added_at = 7;
+  // 更新日時
+  optional google.protobuf.Timestamp updated_at = 8;
+  // レビューの集計結果
+  ReviewSummary review_summary = 9;
+}
+
+// 本棚の書籍
+message BookshelfItem {
+  // 本棚の書籍ID
+  int32 id = 1;
+  // 書籍
+  Book book = 2;
+  // 読書状況
+  ReadingStatus reading_status = 3;
+  // レビュー
+  Review review = 4;
+  // 登録日時
+  google.protobuf.Timestamp put_on_at = 5;
+  // 更新日時
+  optional google.protobuf.Timestamp updated_at = 6;
+}
+
+// 読書状況
+enum ReadingStatus {
+  // 積ん読
+  UNREAD = 0;
+  // 読みたい
+  TO_READ = 1;
+  // 読んでいる
+  READING = 2;
+  // 読み終えた
+  READ = 3;
+}
+
+// レビュー
+message Review {
+  // ランク (星の数1〜5)
+  optional int32 rank = 1;
+  // コメント
+  optional string comment = 2;
+}
+
+// レビューの集計結果
+message ReviewSummary {
+  // 平均ランク
+  optional float average_rank = 1;
+  // リスト
+  repeated Review reviews = 2;
+}
+
+message ListBooksInCatalogRequest {
+  // 書名 (部分一致)
+  optional string title = 1;
+  // 著者 (部分一致)
+  optional string author = 2;
+  // 出版社 (部分一致)
+  optional string publisher = 3;
+  // 出版年月日 (始点)
+  optional Date published_on_from = 4;
+  // 出版年月日 (終点)
+  optional Date published_on_to = 5;
+}
+
+message ListBooksInCatalogResponse {
+  // 書籍のリスト
+  repeated Book books = 1;
+}
+
+message AddBookToCatalogRequest {
+  // 書名
+  string title = 1;
+  // 著者
+  string author = 2;
+  // 出版社
+  string publisher = 3;
+  // 出版年月日
+  Date published_on = 4;
+  // 公式サイトURL
+  optional string official_site_url = 5;
+}
+
+message AddBookToCatalogResponse {
+  // 追加された書籍
+  Book book = 1;
+}
+
+message GetBookInCatalogByIdRequest {
+  // 書籍ID
+  int32 id = 1;
+}
+
+message GetBookInCatalogByIdResponse {
+  // 書籍
+  Book book = 1;
+}
+
+message UpdateBookInCatalogRequest {
+  // 書籍ID
+  int32 id = 1;
+  // 書名
+  optional string title = 2;
+  // 著者
+  optional string author = 3;
+  // 出版社
+  optional string publisher = 4;
+  // 出版年月日
+  optional Date published_on = 5;
+  // 公式サイトURL
+  optional string official_site_url = 6;
+}
+
+message UpdateBookInCatalogResponse {
+  // 更新された書籍
+  Book book = 1;
+}
+
+message RemoveBookFromCatalogRequest {
+  // 書籍ID
+  int32 id = 1;
+}
+
+message ListBooksInBookshelfResponse {
+  // 本棚の書籍のリスト
+  repeated BookshelfItem bookshelf_items = 1;
+}
+
+message PutBookOnBookshelfRequest {
+  // 書籍ID
+  int32 book_id = 1;
+  // 読書状況
+  ReadingStatus reading_status = 2;
+  // レビュー
+  optional Review review = 3;
+}
+
+message PutBookOnBookshelfResponse {
+  // 登録された本棚の書籍
+  BookshelfItem bookshelf_item = 1;
+}
+
+message GetBookInBookshelfByIdRequest {
+  // 本棚の書籍ID
+  int32 id = 1;
+}
+
+message GetBookInBookshelfByIdResponse {
+  // 本棚の書籍
+  BookshelfItem bookshelf_item = 1;
+}
+
+message UpdateBookStatusInBookshelfRequest {
+  // 本棚の書籍ID
+  int32 id = 1;
+  // 読書状況
+  optional ReadingStatus reading_status = 2;
+  // レビュー
+  optional Review review = 3;
+}
+
+message UpdateBookStatusInBookshelfResponse {
+  // 更新された本棚の書籍
+  BookshelfItem bookshelf_item = 1;
+}
+
+message RemoveBookFromBookshelfRequest {
+  // 本棚の書籍ID
+  int32 id = 1;
+}

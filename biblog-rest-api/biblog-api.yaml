@@ -1,0 +1,620 @@
+openapi: 3.1.0
+info:
+  title: biblog-api
+  version: '1.0'
+  description: |-
+    書籍管理サービス"Biblog"のREST API。
+    書籍を本棚にまとめて読書状況やレビューを記録することができる。
+  contact:
+    name: GitHubリポジトリ
+    url: 'https://github.com/lagenorhynque/web-api-style-comparison'
+servers:
+  - url: 'http://localhost:3000'
+tags:
+  - name: book_catalog
+    description: 書籍カタログの管理
+  - name: bookshelf
+    description: 本棚の管理
+paths:
+  /books:
+    get:
+      tags:
+        - book_catalog
+      summary: 書籍の一覧取得
+      operationId: get-books
+      description: 検索条件を満たす書籍をカタログから取得する。
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - schema:
+            type: string
+            minLength: 1
+          in: query
+          name: title
+          description: 書名 (部分一致)
+        - schema:
+            type: string
+            minLength: 1
+          in: query
+          name: author
+          description: 著者 (部分一致)
+        - schema:
+            type: string
+            minLength: 1
+          in: query
+          name: publisher
+          description: 出版社 (部分一致)
+        - schema:
+            type: string
+            format: date
+          in: query
+          name: publication_date_from
+          description: 出版年月日 (始点)
+        - schema:
+            type: string
+            format: date
+          in: query
+          name: publication_date_to
+          description: 出版年月日 (終点)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                required:
+                  - data
+                  - pagination
+        '400':
+          $ref: '#/components/responses/ClientError'
+    post:
+      tags:
+        - book_catalog
+      summary: 書籍の追加
+      operationId: post-books
+      description: 書籍をカタログに追加する。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+            examples:
+              example-1:
+                value:
+                  title: Web APIの設計
+                  author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+                  publisher: 翔泳社
+                  publication_date: '2020-08-26'
+                  official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+        description: 書籍
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+                example: /books/1
+              description: 追加された書籍へのURL
+        '400':
+          $ref: '#/components/responses/ClientError'
+  '/books/{book_id}':
+    parameters:
+      - schema:
+          type: integer
+          example: 1
+          minimum: 0
+        name: book_id
+        in: path
+        required: true
+        description: 書籍ID
+    get:
+      tags:
+        - book_catalog
+      summary: 書籍の詳細取得
+      operationId: get-books-book_id
+      description: 特定の書籍を取得する。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BookDetail'
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+    put:
+      tags:
+        - book_catalog
+      summary: 書籍の更新
+      operationId: put-books-book_id
+      description: 特定の書籍を更新する。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+            examples:
+              example-1:
+                value:
+                  title: Web APIの設計
+                  author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+                  publisher: 翔泳社
+                  publication_date: '2020-08-26'
+                  official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+        description: 書籍
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+    delete:
+      tags:
+        - book_catalog
+      summary: 書籍の削除
+      operationId: delete-books-book_id
+      description: 特定の書籍をカタログから削除する。
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+  /bookshelf-items:
+    get:
+      tags:
+        - bookshelf
+      summary: 本棚の書籍の一覧取得
+      operationId: get-bookshelf-items
+      description: 本棚の書籍をステータスとともにすべて取得する。
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BookshelfItem'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                required:
+                  - data
+                  - pagination
+        '400':
+          $ref: '#/components/responses/ClientError'
+    post:
+      tags:
+        - bookshelf
+      summary: 本棚の書籍の登録
+      operationId: post-bookshelf-items
+      description: 特定の書籍をステータスとともに本棚に登録する。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                book_id:
+                  type: integer
+                  description: 書籍ID
+                  minimum: 0
+                reading_status:
+                  $ref: '#/components/schemas/ReadingStatus'
+                review:
+                  $ref: '#/components/schemas/Review'
+              required:
+                - book_id
+                - reading_status
+                - review
+            examples:
+              example-1:
+                value:
+                  book_id: 1
+                  reading_status: TO_READ
+                  review:
+                    rank: null
+                    comment: null
+        description: 本棚の書籍
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+                example: /bookshelf-items/1
+              description: 登録された本棚の書籍へのURL
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+  '/bookshelf-items/{bookshelf_item_id}':
+    parameters:
+      - schema:
+          type: integer
+          example: 1
+          minimum: 0
+        name: bookshelf_item_id
+        in: path
+        required: true
+        description: 本棚の書籍ID
+    get:
+      tags:
+        - bookshelf
+      summary: 本棚の書籍の詳細取得
+      operationId: get-bookshelf-items-bookshelf_item_id
+      description: 本棚の特定の書籍をステータスとともに取得する。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BookshelfItemDetail'
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+    patch:
+      tags:
+        - bookshelf
+      summary: 本棚の書籍のステータス更新
+      operationId: patch-bookshelf-items-bookshelf_item_id
+      description: 本棚の特定の書籍のステータスを更新する。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reading_status:
+                  $ref: '#/components/schemas/ReadingStatus'
+                review:
+                  $ref: '#/components/schemas/Review'
+              required:
+                - reading_status
+                - review
+            examples:
+              example-1:
+                value:
+                  reading_status: READ
+                  review:
+                    rank: 3
+                    comment: 設計の観点を整理する参考になった。
+        description: 本棚の書籍のステータス
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+    delete:
+      tags:
+        - bookshelf
+      summary: 本棚の書籍の除外
+      operationId: delete-bookshelf-items-bookshelf_item_id
+      description: 本棚の特定の書籍を本棚から削除する。
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '404':
+          $ref: '#/components/responses/ClientError'
+components:
+  schemas:
+    Book:
+      title: Book
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 書籍ID
+          minimum: 0
+          readOnly: true
+        title:
+          type: string
+          description: 書名
+          minLength: 1
+          maxLength: 100
+        author:
+          type: string
+          description: 著者
+          minLength: 1
+          maxLength: 150
+        publisher:
+          type: string
+          description: 出版社
+          minLength: 1
+          maxLength: 50
+        publication_date:
+          type: string
+          format: date
+          description: 出版年月日
+        official_site_url:
+          type: [string, 'null']
+          format: uri
+          description: 公式サイトURL
+          maxLength: 150
+      required:
+        - id
+        - title
+        - author
+        - publisher
+        - publication_date
+      description: 書籍
+      example:
+        id: 1
+        title: Web APIの設計
+        author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+        publisher: 翔泳社
+        publication_date: '2020-08-26'
+        official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+    BookDetail:
+      allOf:
+        - $ref: '#/components/schemas/Book'
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              description: 作成日時
+              readOnly: true
+            updated_at:
+              type: [string, 'null']
+              format: date-time
+              description: 更新日時
+              readOnly: true
+            average_review_rank:
+              type: [number, 'null']
+              description: 平均レビューランク
+              readOnly: true
+            reviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+              description: レビューリスト
+              readOnly: true
+          required:
+            - created_at
+            - reviews
+      description: 書籍の詳細
+      example:
+        id: 1
+        title: Web APIの設計
+        author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+        publisher: 翔泳社
+        publication_date: '2020-08-26'
+        official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+        created_at: '2020-08-26T14:15:22Z'
+        updated_at: null
+        average_review_rank: 5
+        reviews:
+          - rank: 5
+            comment: REST APIを主に想定しつつWeb APIというインターフェースをどのような観点から設計すべきか非常に分かりやすく解説している良書。
+    BookshelfItem:
+      title: BookshelfItem
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 本棚の書籍ID
+          minimum: 0
+          readOnly: true
+        book:
+          $ref: '#/components/schemas/Book'
+        reading_status:
+          $ref: '#/components/schemas/ReadingStatus'
+        review:
+          $ref: '#/components/schemas/Review'
+      required:
+        - id
+        - book
+        - reading_status
+        - review
+      description: 本棚の書籍
+      example:
+        id: 1
+        book:
+          id: 1
+          title: Web APIの設計
+          author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+          publisher: 翔泳社
+          publication_date: '2020-08-26'
+          official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+        reading_status: READING
+        review:
+          rank: 5
+          comment: REST APIを主に想定しつつWeb APIというインターフェースをどのような観点から設計すべきか非常に分かりやすく解説している良書。
+    BookshelfItemDetail:
+      title: BookshelfItemDetail
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 本棚の書籍ID
+          minimum: 0
+          readOnly: true
+        book_detail:
+          $ref: '#/components/schemas/BookDetail'
+        reading_status:
+          $ref: '#/components/schemas/ReadingStatus'
+        review:
+          $ref: '#/components/schemas/Review'
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時
+          readOnly: true
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+          description: 更新日時
+          readOnly: true
+      required:
+        - id
+        - book_detail
+        - reading_status
+        - review
+        - created_at
+      description: 本棚の書籍の詳細
+      example:
+        id: 1
+        book_detail:
+          id: 1
+          title: Web APIの設計
+          author: '(著) Arnaud Lauret, (翻訳) 株式会社クイープ, (監修) 株式会社クイープ'
+          publisher: 翔泳社
+          publication_date: '2020-08-26'
+          official_site_url: 'https://www.shoeisha.co.jp/book/detail/9784798167015'
+          created_at: '2020-08-26T14:15:22Z'
+          updated_at: null
+          average_review_rank: 5
+          reviews:
+            - rank: 5
+              comment: REST APIを主に想定しつつWeb APIというインターフェースをどのような観点から設計すべきか非常に分かりやすく解説している良書。
+        reading_status: READING
+        review:
+          rank: 5
+          comment: REST APIを主に想定しつつWeb APIというインターフェースをどのような観点から設計すべきか非常に分かりやすく解説している良書。
+        created_at: '2021-05-24T14:15:22Z'
+        updated_at: null
+    Error:
+      title: Error
+      type: object
+      properties:
+        message:
+          type: string
+          description: メッセージ
+        type:
+          type: string
+          description: 種別
+        source:
+          type: string
+          description: 発生源
+      required:
+        - message
+      description: エラー情報
+      example:
+        message: 指定された書籍は存在しません。
+        source: book_id
+    Pagination:
+      title: Pagination
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: 1ページあたりの上限件数
+          minimum: 1
+        page:
+          type: integer
+          description: ページ
+          minimum: 1
+        total_count:
+          type: integer
+          description: 総件数
+          minimum: 0
+      required:
+        - limit
+        - page
+        - total_count
+      description: ページネーション情報
+      example:
+        limit: 10
+        page: 1
+        total_count: 50
+    ReadingStatus:
+      type: string
+      title: ReadingStatus
+      enum:
+        - TO_READ
+        - READING
+        - READ
+        - UNREAD
+      default: UNREAD
+      description: |-
+        読書状況
+        - `TO_READ`: 読みたい
+        - `READING`: 読んでいる
+        - `READ`: 読み終えた
+        - `UNREAD`: 積ん読
+    Review:
+      title: Review
+      type: object
+      properties:
+        rank:
+          type: [integer, 'null']
+          description: ランク
+          minimum: 1
+          maximum: 5
+        comment:
+          type: [string, 'null']
+          description: コメント
+      description: レビュー
+      example:
+        rank: 5
+        comment: REST APIを主に想定しつつWeb APIというインターフェースをどのような観点から設計すべきか非常に分かりやすく解説している良書。
+  parameters:
+    limit:
+      name: limit
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: 1ページあたりの上限件数
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: ページ
+  responses:
+    ClientError:
+      description: クライアント起因のエラー
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+            required:
+              - errors
